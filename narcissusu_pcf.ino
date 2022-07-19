@@ -5,6 +5,8 @@
 #define buttonNextPin 3
 #define buttonEnterPin 4
 
+int commandArray[] = {0b10011010, 0b11100001, 0b00010111,0b00110111};
+
 void blink();
 void detectButtons();
 void executeCommand();
@@ -84,19 +86,22 @@ void detectButtons(void){
     buttonFlag = true;
     buttonTimer = millis();
     //do something;
-//    setPrevCommand();
+    //setPrevCommand();
   }
   if (btnNextState && !buttonFlag && millis() - buttonTimer > 50) {
     buttonFlag = true;
     buttonTimer = millis();
     //do something;
-//    setNextCommand();
+    //setNextCommand();
   }
   if (btnEnterState && !buttonFlag && millis() - buttonTimer > 50) {
     buttonFlag = true;
     buttonTimer = millis();
     //do something;
-    executeCommand(P0, 23535);
+    executeCommand(P0, commandArray[0]);
+    executeCommand(P1, commandArray[1]);
+    executeCommand(P2, commandArray[2]);
+    executeCommand(P3, commandArray[3]);
   }
   
   if ((!btnPrevState || !btnNextState || !btnEnterState) && buttonFlag && millis() - buttonTimer > 200) {
@@ -108,16 +113,16 @@ void detectButtons(void){
 
 void executeCommand(int cell, int data){
   setMemoryCell(cell);
+  buttonHIGH();
   buttonReset();
   sendData(data); 
   buttonEnter();
 }
 
-void sendData(unsigned long value){
-  //принять число и отправлять на pcfButtons P2 1 и на P3 0
-  for (int i=32;i<0;i--){
-    if(bit_is_set(value, i)) buttonHIGH();
-    if(bit_is_clear(value, i)) buttonLOW();
+void sendData(int value){
+  for (int i=31; i>0; i--){
+    if(bit_is_set(value, i)) buttonHIGH(); //Serial.print("1");
+    if(bit_is_clear(value, i)) buttonLOW(); //Serial.print("0");
   }
 }
 
