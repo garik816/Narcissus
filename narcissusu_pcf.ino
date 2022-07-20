@@ -1,3 +1,6 @@
+// SDA -> A4 to 15 pin on pcf
+// SCL -> A5 to 14 pin on pcf
+
 #include "Arduino.h"
 #include "PCF8574.h"
 
@@ -5,11 +8,17 @@
 #define buttonNextPin 3
 #define buttonEnterPin 4
 
-int commandArray[] = {0b10011010, 0b11100001, 0b00010111,0b00110111};
+int commandArray[] = {0b10011010, 0b11100001, 0b00010111, 0b00110111};
 
 void blink();
 void detectButtons();
-void executeCommand();
+void executeCommand(int cell, int data);
+void sendData(int value);
+void setMemoryCell(int Area);
+void buttonEnter();
+void buttonReset();
+void buttonHIGH();
+void buttonLOW();
 
 // Set i2c address
 PCF8574 pcfMemoryArea(0x20);
@@ -87,12 +96,20 @@ void detectButtons(void){
     buttonTimer = millis();
     //do something;
     //setPrevCommand();
+    executeCommand(P0, commandArray[4]);
+    executeCommand(P1, commandArray[5]);
+    executeCommand(P2, commandArray[6]);
+    executeCommand(P3, commandArray[7]);
   }
   if (btnNextState && !buttonFlag && millis() - buttonTimer > 50) {
     buttonFlag = true;
     buttonTimer = millis();
     //do something;
     //setNextCommand();
+    executeCommand(P0, commandArray[8]);
+    executeCommand(P1, commandArray[9]);
+    executeCommand(P2, commandArray[10]);
+    executeCommand(P3, commandArray[11]);
   }
   if (btnEnterState && !buttonFlag && millis() - buttonTimer > 50) {
     buttonFlag = true;
