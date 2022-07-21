@@ -4,16 +4,20 @@
 #include "Arduino.h"
 #include "PCF8574.h"
 
+#define BIT_CHECK(a,b) (!!((a) & (1ULL<<(b))))
+
 #define buttonPrevPin 2
 #define buttonNextPin 3
 #define buttonEnterPin 4
 
-int commandArray[] = {0b10011010, 0b11100001, 0b00010111, 0b00110111};
+long commandArray[] = { 0b1110100000100010101001110101, 0b1110000100101010101101011011, 0b01010100110110101000101010111, 0b1010011100010101010001010011,
+                        0b1001000100100010101001110101, 0b1110000101001010101101011011, 0b01010100110110101000101000111, 0b1010011001010101010101010011,
+                        0b1011000100010101001001110101, 0b1110100001011011010100100101, 0b01010101100101010100101100111, 0b1011011100010101010101010011 };
 
 void blink();
 void detectButtons();
-void executeCommand(int cell, int data);
-void sendData(int value);
+void executeCommand(int cell, long data);
+void sendData(long value);
 void setMemoryCell(int Area);
 void buttonEnter();
 void buttonReset();
@@ -33,10 +37,11 @@ bool buttonFlag = false;
 void setup(){
 	Serial.begin(115200);
 	delay(1000);
+  Serial.println("start");
 
-  pinMode(buttonPrevPin, INPUT);
-  pinMode(buttonNextPin, INPUT);
-  pinMode(buttonEnterPin, INPUT);
+  pinMode(buttonPrevPin, INPUT_PULLUP);
+  pinMode(buttonNextPin, INPUT_PULLUP);
+  pinMode(buttonEnterPin, INPUT_PULLUP);
 	pcfMemoryArea.pinMode(P0, OUTPUT, HIGH);
   pcfMemoryArea.pinMode(P1, OUTPUT, HIGH);
   pcfMemoryArea.pinMode(P2, OUTPUT, HIGH);
@@ -50,7 +55,7 @@ void setup(){
   pcfButtons.pinMode(P2, OUTPUT, HIGH);
   pcfButtons.pinMode(P3, OUTPUT, HIGH);
 	
-	Serial.print("Init pcf8574...");
+	Serial.println("Init pcf8574...");
 	if (pcfMemoryArea.begin()){
 		Serial.println("pcfMemoryArea - OK");
 	}
@@ -96,29 +101,29 @@ void detectButtons(void){
     buttonTimer = millis();
     //do something;
     //setPrevCommand();
-    executeCommand(P0, commandArray[4]);
-    executeCommand(P1, commandArray[5]);
-    executeCommand(P2, commandArray[6]);
-    executeCommand(P3, commandArray[7]);
+    executeCommand(P0, commandArray[0]);
+    executeCommand(P1, commandArray[1]);
+    executeCommand(P2, commandArray[2]);
+    executeCommand(P3, commandArray[3]);
   }
   if (btnNextState && !buttonFlag && millis() - buttonTimer > 50) {
     buttonFlag = true;
     buttonTimer = millis();
     //do something;
     //setNextCommand();
-    executeCommand(P0, commandArray[8]);
-    executeCommand(P1, commandArray[9]);
-    executeCommand(P2, commandArray[10]);
-    executeCommand(P3, commandArray[11]);
+    executeCommand(P0, commandArray[4]);
+    executeCommand(P1, commandArray[5]);
+    executeCommand(P2, commandArray[6]);
+    executeCommand(P3, commandArray[7]);
   }
   if (btnEnterState && !buttonFlag && millis() - buttonTimer > 50) {
     buttonFlag = true;
     buttonTimer = millis();
     //do something;
-    executeCommand(P0, commandArray[0]);
-    executeCommand(P1, commandArray[1]);
-    executeCommand(P2, commandArray[2]);
-    executeCommand(P3, commandArray[3]);
+    executeCommand(P0, commandArray[8]);
+    executeCommand(P1, commandArray[9]);
+    executeCommand(P2, commandArray[10]);
+    executeCommand(P3, commandArray[11]);
   }
   
   if ((!btnPrevState || !btnNextState || !btnEnterState) && buttonFlag && millis() - buttonTimer > 200) {
@@ -128,7 +133,7 @@ void detectButtons(void){
   }
 }
 
-void executeCommand(int cell, int data){
+void executeCommand(int cell, long data){
   setMemoryCell(cell);
   buttonHIGH();
   buttonReset();
@@ -136,11 +141,14 @@ void executeCommand(int cell, int data){
   buttonEnter();
 }
 
-void sendData(int value){
-  for (int i=31; i>0; i--){
-    if(bit_is_set(value, i)) buttonHIGH(); //Serial.print("1");
-    if(bit_is_clear(value, i)) buttonLOW(); //Serial.print("0");
+void sendData(long value){
+  // Serial.println("======");
+  // Serial.println(value, BIN);
+  for (int i=28; i>0; i--){
+    if(BIT_CHECK(value, i-1)) {buttonHIGH(); Serial.print("1");}
+    else {buttonLOW(); Serial.print("0");}
   }
+  Serial.println("");
 }
 
 void setMemoryCell(int Area){
